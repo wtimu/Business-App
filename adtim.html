@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdtimTech Accounting System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --bg-color: #f5f7fb;
+            --text-color: #212529;
+            --card-bg: white;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-header {
+            background: var(--primary);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .login-header h2 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .login-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        
+        .login-form {
+            padding: 25px;
+        }
+        
+        .form-control {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .btn-login {
+            background: var(--primary);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .btn-login:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .status-connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-icon {
+            margin-right: 8px;
+        }
+        
+        .api-config {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        /* Dashboard styles */
+        .dashboard {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            max-height: 90vh;
+        }
+        
+        .sidebar {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            height: 100%;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .main-content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(90vh - 40px);
+        }
+        
+        .dashboard-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            opacity: 0.7;
+        }
+        
+        .offline-warning {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ffc107;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1000;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .connection-modal pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 5px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-header">
+            <h2><i class="fas fa-calculator me-2"></i>Adtim Accounting</h2>
+            <p>Sign in to your account</p>
+        </div>
+        
+        <div class="login-form">
+            <div id="connectionStatus" class="status-indicator status-disconnected">
+                <i class="fas fa-times-circle status-icon"></i>
+                <span>Not connected</span>
+            </div>
+            
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" placeholder="Enter your username" required value="admin">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Enter your password" required value="admin123">
+                </div>
+                
+                <button type="submit" class="btn btn-login" id="loginButton">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </button>
+            </form>
+            
+            <div class="api-config">
+                <p><span id="backendStatus">Not Connected</span></p>
+                <p> <span id="backendUrl">https://adtimtech-accounting-api.onrender.com</span></p>
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="testBackendConnection()">
+                        <i class="fas fa-plug me-1"></i>Test Connection
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Adtim Technologies LTD &copy; 2025 | www.adtimtech.com</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="dashboard" id="dashboard">
+        <div class="row g-0" style="height: 100%;">
+            <!-- Sidebar -->
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <h3 class="text-center mb-4">Adtim Technologies LTD</h3>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-section="dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="transactions">
+                                <i class="fas fa-exchange-alt me-2"></i>Transactions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="reports">
+                                <i class="fas fa-chart-bar me-2"></i>Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-section="accounts">
+                                <i class="fas fa-book me-2"></i>Accounts
+                            </a>
+                        </li>
+                        <li class="nav-item mt-4">
+                            <a class="nav-link" href="#" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <div class="main-content">
+                    <!-- Dashboard Content -->
+                    <div class="content-section" id="dashboardSection">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Financial Dashboard</h3>
+                            <span id="userInfo">Welcome, Admin</span>
+                        </div>
+                        
+                        <!-- Dashboard Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 mb-3">
+                                <div class="card dashboard-card bg-primary text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h5 class="card-title">Total Income</h5>
+                                                <h2 class="card-text" id="totalIncome">UGX 0</h2>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-dollar-sign"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card dashboard-card bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h5 class="card-title">Total Expenses</h5>
+                                                <h2 class="card-text" id="totalExpenses">UGX 0</h2>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-receipt"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card dashboard-card bg-info text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h5 class="card-title">Net Profit</h5>
+                                                <h2 class="card-text" id="netProfit">UGX 0</h2>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card dashboard-card bg-warning text-dark">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h5 class="card-title">Cash Balance</h5>
+                                                <h2 class="card-text" id="cashBalance">UGX 0</h2>
+                                            </div>
+                                            <div class="card-icon">
+                                                <i class="fas fa-wallet"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Transactions -->
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Recent Transactions</h5>
+                                <button class="btn btn-sm btn-primary" id="addTransactionBtn">
+                                    <i class="fas fa-plus me-1"></i>Add Transaction
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Account</th>
+                                                <th>Amount</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recentTransactions">
+                                            <tr>
+                                                <td colspan="5" class="text-center">No transactions found</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Other sections would go here -->
+                    <div class="content-section d-none" id="transactionsSection">
+                        <h3>Transactions Management</h3>
+                        <p>This section will be implemented when backend is connected.</p>
+                    </div>
+                    
+                    <div class="content-section d-none" id="reportsSection">
+                        <h3>Financial Reports</h3>
+                        <p>This section will be implemented when backend is connected.</p>
+                    </div>
+                    
+                    <div class="content-section d-none" id="accountsSection">
+                        <h3>Chart of Accounts</h3>
+                        <p>This section will be implemented when backend is connected.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offline Warning -->
+    <div class="offline-warning d-none" id="offlineWarning">
+        <i class="fas fa-wifi me-1"></i> Using offline mode. Data will be saved locally.
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Backend API configuration
+        const API_BASE_URL = 'https://adtimtech-accounting-api.onrender.com';
+        let authToken = localStorage.getItem('authToken');
+        
+        // Real backend functions
+        const realBackend = {
+            login: async (username, password) => {
+                const response = await fetch(`${API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+                
+                return response.json();
+            },
+            
+            getDashboardData: async () => {
+                const response = await fetch(`${API_BASE_URL}/api/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch dashboard data');
+                }
+                
+                return response.json();
+            },
+            
+            addTransaction: async (transaction) => {
+                const response = await fetch(`${API_BASE_URL}/api/transactions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                    body: JSON.stringify(transaction),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to add transaction');
+                }
+                
+                return response.json();
+            },
+            
+            deleteTransaction: async (id) => {
+                const response = await fetch(`${API_BASE_URL}/api/transactions/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to delete transaction');
+                }
+                
+                return response.json();
+            }
+        };
+        
+        // Test backend connection
+        async function testBackendConnection() {
+            const loginButton = document.getElementById('loginButton');
+            const originalText = loginButton.innerHTML;
+            loginButton.innerHTML = '<span class="loading-spinner"></span> Testing...';
+            loginButton.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+                });
+                
+                if (response.ok) {
+                    document.getElementById('connectionStatus').className = 'status-indicator status-connected';
+                    document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-check-circle status-icon"></i><span>Connected to backend</span>';
+                    document.getElementById('backendStatus').textContent = 'Connected';
+                    alert('Backend connection successful!');
+                } else {
+                    throw new Error('Connection test failed');
+                }
+            } catch (error) {
+                document.getElementById('connectionStatus').className = 'status-indicator status-disconnected';
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-times-circle status-icon"></i><span>Backend connection failed</span>';
+                document.getElementById('backendStatus').textContent = 'Connection Failed';
+                alert('Backend connection failed. Please check if your server is running.');
+                console.error('Connection test error:', error);
+            } finally {
+                loginButton.innerHTML = originalText;
+                loginButton.disabled = false;
+            }
+        }
+        
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                authToken = token;
+                showDashboard(JSON.parse(user));
+                loadDashboardData();
+            }
+            
+            // Test backend connection on load
+            testBackendConnection();
+        });
+        
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginButton = document.getElementById('loginButton');
+            const originalText = loginButton.innerHTML;
+            
+            loginButton.innerHTML = '<span class="loading-spinner"></span> Signing in...';
+            loginButton.disabled = true;
+            
+            try {
+                const data = await realBackend.login(username, password);
+                
+                // Save the auth token and user data
+                authToken = data.token;
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                // Show the dashboard
+                showDashboard(data.user);
+                loadDashboardData();
+                
+                // Update connection status
+                document.getElementById('connectionStatus').className = 'status-indicator status-connected';
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-check-circle status-icon"></i><span>Connected to backend</span>';
+                document.getElementById('backendStatus').textContent = 'Connected';
+                
+            } catch (error) {
+                // Fallback to mock backend if real backend fails
+                try {
+                    console.log('Falling back to mock backend');
+                    const data = await mockBackend.login(username, password);
+                    
+                    // Save the auth token and user data
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Show the dashboard
+                    showDashboard(data.user);
+                    loadDashboardData();
+                    
+                    // Show offline warning
+                    document.getElementById('offlineWarning').classList.remove('d-none');
+                    document.getElementById('connectionStatus').className = 'status-indicator status-disconnected';
+                    document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-exclamation-triangle status-icon"></i><span>Using offline mode</span>';
+                    document.getElementById('backendStatus').textContent = 'Offline Mode';
+                    
+                } catch (fallbackError) {
+                    alert('Login failed. Please use admin/admin123');
+                    console.error('Login error:', fallbackError);
+                }
+            } finally {
+                loginButton.innerHTML = originalText;
+                loginButton.disabled = false;
+            }
+        });
+        
+        // Show dashboard function
+        function showDashboard(user) {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userInfo').textContent = `Welcome, ${user.name}`;
+        }
+        
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                const data = await realBackend.getDashboardData();
+                
+                // Update dashboard with data
+                document.getElementById('totalIncome').textContent = `UGX ${data.totalIncome.toLocaleString()}`;
+                document.getElementById('totalExpenses').textContent = `UGX ${data.totalExpenses.toLocaleString()}`;
+                document.getElementById('netProfit').textContent = `UGX ${data.netProfit.toLocaleString()}`;
+                document.getElementById('cashBalance').textContent = `UGX ${data.cashBalance.toLocaleString()}`;
+                
+                // Update recent transactions
+                const transactionsBody = document.getElementById('recentTransactions');
+                transactionsBody.innerHTML = '';
+                
+                if (data.recentTransactions.length === 0) {
+                    transactionsBody.innerHTML = '<tr><td colspan="5" class="text-center">No transactions found</td></tr>';
+                } else {
+                    data.recentTransactions.forEach(transaction => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${transaction.date}</td>
+                            <td>${transaction.description}</td>
+                            <td>${transaction.account}</td>
+                            <td class="${transaction.amount >= 0 ? 'text-success' : 'text-danger'}">
+                                UGX ${Math.abs(transaction.amount).toLocaleString()}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${transaction.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        transactionsBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Dashboard data error:', error);
+                // Fallback to mock backend
+                try {
+                    const data = await mockBackend.getDashboardData();
+                    
+                    // Update dashboard with data
+                    document.getElementById('totalIncome').textContent = `UGX ${data.totalIncome.toLocaleString()}`;
+                    document.getElementById('totalExpenses').textContent = `UGX ${data.totalExpenses.toLocaleString()}`;
+                    document.getElementById('netProfit').textContent = `UGX ${data.netProfit.toLocaleString()}`;
+                    document.getElementById('cashBalance').textContent = `UGX ${data.cashBalance.toLocaleString()}`;
+                    
+                    // Update recent transactions
+                    const transactionsBody = document.getElementById('recentTransactions');
+                    transactionsBody.innerHTML = '';
+                    
+                    if (data.recentTransactions.length === 0) {
+                        transactionsBody.innerHTML = '<tr><td colspan="5" class="text-center">No transactions found</td></tr>';
+                    } else {
+                        data.recentTransactions.forEach(transaction => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${transaction.date}</td>
+                                <td>${transaction.description}</td>
+                                <td>${transaction.account}</td>
+                                <td class="${transaction.amount >= 0 ? 'text-success' : 'text-danger'}">
+                                    UGX ${Math.abs(transaction.amount).toLocaleString()}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${transaction.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                            transactionsBody.appendChild(row);
+                        });
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback dashboard data error:', fallbackError);
+                }
+            }
+        }
+        
+        // Add transaction
+        document.getElementById('addTransactionBtn').addEventListener('click', function() {
+            const description = prompt('Enter transaction description:');
+            if (!description) return;
+            
+            const amount = parseFloat(prompt('Enter amount (negative for expenses):'));
+            if (isNaN(amount)) return;
+            
+            const account = prompt('Enter account (Cash/Bank):') || 'Cash';
+            const category = amount >= 0 ? 'income' : 'expense';
+            
+            // Try real backend first, then fallback to mock backend
+            realBackend.addTransaction({
+                description,
+                amount,
+                account,
+                category
+            }).then(() => {
+                loadDashboardData();
+            }).catch(error => {
+                console.error('Failed to add transaction to backend:', error);
+                // Fallback to mock backend
+                mockBackend.addTransaction({
+                    description,
+                    amount,
+                    account,
+                    category
+                }).then(() => {
+                    loadDashboardData();
+                });
+            });
+        });
+        
+        // Delete transaction
+        function deleteTransaction(id) {
+            // Try real backend first, then fallback to mock backend
+            realBackend.deleteTransaction(id).then(() => {
+                loadDashboardData();
+            }).catch(error => {
+                console.error('Failed to delete transaction from backend:', error);
+                // Fallback to mock backend
+                mockBackend.deleteTransaction(id).then(() => {
+                    loadDashboardData();
+                });
+            });
+        }
+        
+        // Navigation
+        document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const section = this.getAttribute('data-section');
+                
+                // Hide all sections
+                document.querySelectorAll('.content-section').forEach(s => {
+                    s.classList.add('d-none');
+                });
+                
+                // Show selected section
+                document.getElementById(section + 'Section').classList.remove('d-none');
+                
+                // Update active link
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+        
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Clear stored data
+            authToken = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            
+            // Show login screen
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'block';
+        });
+        
+        // Mock backend simulation (local storage) for fallback
+        const mockBackend = {
+            login: async (username, password) => {
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                if (username === 'admin' && password === 'admin123') {
+                    return {
+                        token: 'mock-jwt-token',
+                        user: { username: 'admin', name: 'Admin User', role: 'admin' }
+                    };
+                } else {
+                    throw new Error('Invalid credentials');
+                }
+            },
+            
+            getDashboardData: async () => {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Get transactions from local storage or use default
+                const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+                
+                // Calculate totals
+                const totalIncome = transactions
+                    .filter(t => t.category === 'income')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                    
+                const totalExpenses = transactions
+                    .filter(t => t.category === 'expense')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                return {
+                    totalIncome,
+                    totalExpenses,
+                    netProfit: totalIncome - totalExpenses,
+                    cashBalance: 10000 + totalIncome - totalExpenses, // Starting balance
+                    recentTransactions: transactions.slice(-5).reverse()
+                };
+            },
+            
+            addTransaction: async (transaction) => {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+                const newTransaction = {
+                    id: Date.now(),
+                    date: new Date().toISOString().split('T')[0],
+                    ...transaction
+                };
+                
+                transactions.push(newTransaction);
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                
+                return newTransaction;
+            },
+            
+            deleteTransaction: async (id) => {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+                const updatedTransactions = transactions.filter(t => t.id !== id);
+                localStorage.setItem('transactions', JSON.stringify(updatedTransactions));
+                
+                return { message: 'Transaction deleted' };
+            }
+        };
+    </script>
+</body>
+</html>
