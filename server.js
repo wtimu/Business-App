@@ -133,7 +133,7 @@ app.get('/api/dashboard', async (req, res) => {
       totalIncome,
       totalExpenses,
       netProfit: totalIncome - totalExpenses,
-      cashBalance: 10000 + totalIncome - totalExpenses,
+      cashBalance: 0 + totalIncome - totalExpenses,
       recentTransactions: transactions.slice(0, 5)
     });
   } catch (err) {
