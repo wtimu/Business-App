@@ -1,0 +1,21 @@
+adtim-finance/
+├── uploads/              // To store uploaded receipts and invoices
+├── public/
+│   ├── css/
+│   │   └── style.css     // Main stylesheet
+│   ├── js/
+│   │   ├── auth.js       // Handles login/logout
+│   │   ├── dashboard.js  // Logic for the dashboard graphs
+│   │   └── main.js       // Core application logic
+│   └── images/
+│       └── logo.png      // Your company logo
+├── views/
+│   ├── index.html        // Main application dashboard
+│   └── login.html        // Login page
+├── .env                  // Environment variables (DB config, secrets)
+├── package.json          // Project dependencies
+└── server.js             // Main backend server file
+
+
+
+ pg_dump -U postgres -Fc adtim -f adtim.backup

@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adtim Technologies (U) Limited</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/x-icon" href="/images/fav.ico">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Adtim Finance">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-icon" href="/images/logo.png">
+    <meta name="msapplication-TileImage" content="/images/logo.png">
+    <meta name="msapplication-TileColor" content="#667eea">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="/images/logo.png" alt="Logo" class="logo">
+                <h3>Adtim Technologies (U) Limited</h3>
+                <button id="sidebar-toggle-btn" class="sidebar-toggle-arrow">
+                    <span class="arrow">‹</span>
+                </button>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="nav-link active" data-view="dashboard">
+                            <span class="nav-icon">📊</span><span>Dashboard</span></a>
+                    </li>
+                    <li><a href="#" class="nav-link" data-view="transactions">
+                            <span class="nav-icon">💰</span><span>Transactions</span></a>
+                    </li>
+                    <li><a href="#" class="nav-link" data-view="accounts">
+                            <span class="nav-icon">📋</span><span>Accounts</span></a>
+                    </li>
+                    <li><a href="#" class="nav-link" data-view="ledger">
+                            <span class="nav-icon">📖</span><span>Ledger</span></a>
+                    </li>
+                    <li><a href="#" class="nav-link" data-view="reports">
+                            <span class="nav-icon">📈</span><span>Reports</span></a>
+                    </li>
+                    <li><a href="#" class="nav-link" data-view="users" id="users-nav" style="display:none">
+                            <span class="nav-icon">👥</span><span>Users</span></a>
+                    </li>
+                    <li><a href="#" class="nav-link" data-view="audit" id="audit-nav" style="display:none">
+                            <span class="nav-icon">🔍</span><span>Audit Logs</span></a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Logged in as: <strong id="username-display">superadmin</strong></p>
+                <p>Role: <strong id="user-role-display">Super Admin</strong></p>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </aside>
+
+        <div id="mobile-overlay" class="mobile-overlay"></div>
+        <main class="main-content">
+            <button id="mobile-menu-toggle" class="mobile-menu-btn" style="display: none;">
+                <span class="hamburger-icon">☰</span>
+            </button>
+            <div id="app-view">
+                <div class="dashboard">
+                    <h1>Dashboard - Adtim Technologies (U) Limited</h1>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <h3>Total Income</h3>
+                            <p id="total-income">UGX 0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Expenses</h3>
+                            <p id="total-expenses">UGX 0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Net Profit</h3>
+                            <p id="net-profit">UGX 0</p>
+                        </div>
+                    </div>
+                    <div class="charts-container">
+                        <div class="chart-box">
+                            <h3>Monthly Profits</h3>
+                            <canvas id="profitChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Expense Breakdown</h3>
+                            <canvas id="expensePieChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Income vs Expenses</h3>
+                            <canvas id="incomeExpenseBar"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div id="transaction-modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Transaction</h2>
+            <form id="transaction-form">
+                <input type="text" id="description" placeholder="Description" required>
+                <input type="date" id="date" required>
+                <input type="number" id="amount" placeholder="Amount (UGX)" step="0.01" required>
+                <select id="debit-account" required>
+                    <option value="">Select Debit Account</option>
+                </select>
+                <select id="credit-account" required>
+                    <option value="">Select Credit Account</option>
+                </select>
+                <input type="file" id="document" accept=".pdf,.jpg,.jpeg,.png">
+                <button type="submit">Save Transaction</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Validation Modal -->
+    <div id="admin-modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Admin Authorization Required</h2>
+            <form id="admin-form">
+                <input type="text" id="admin-username" placeholder="Admin Username" required>
+                <input type="password" id="admin-password" placeholder="Admin Password" required>
+                <button type="submit">Authorize</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="user-modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add User</h2>
+            <form id="user-form">
+                <input type="text" id="user-username" placeholder="Username" required>
+                <input type="email" id="user-email" placeholder="Email" required>
+                <input type="password" id="user-password" placeholder="Password" required>
+                <select id="user-access-level" required>
+                    <option value="">Select Access Level</option>
+                    <option value="Viewer">Viewer</option>
+                    <option value="User">User</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Super Admin">Super Admin</option>
+                </select>
+                <button type="submit">Create User</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        let currentUser = null;
+        let accounts = [];
+        let transactions = [];
+        let users = [];
+        let auditLogs = [];
+
+        // DOM Ready
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Sidebar toggle
+            const sidebarToggle = document.getElementById('sidebar-toggle-btn');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => {
+                    document.querySelector('.sidebar').classList.toggle('sidebar-minimized');
+                    document.querySelector('.main-content').classList.toggle('main-content-expanded');
+                });
+            }
+
+            // Check if user is logged in
+            const token = localStorage.getItem('token');
+            const userData = localStorage.getItem('user');
+
+            if (!token || !userData) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Set current user
+            currentUser = JSON.parse(userData);
+
+            // Set user info
+            document.getElementById('username-display').textContent = currentUser.username;
+            document.getElementById('user-role-display').textContent = currentUser.access_level;
+
+            // Show/hide menu items based on role
+            if (currentUser.access_level === 'Super Admin') {
+                document.getElementById('users-nav').style.display = 'block';
+                document.getElementById('audit-nav').style.display = 'block';
+            }
+            
+            // Mobile menu toggle
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            
+            function toggleMobileMenu() {
+                sidebar.classList.toggle('mobile-open');
+                mobileOverlay.classList.toggle('active');
+                mobileToggle.classList.toggle('active');
+                
+                const icon = mobileToggle.querySelector('.hamburger-icon');
+                if (mobileToggle.classList.contains('active')) {
+                    icon.innerHTML = '×';
+                } else {
+                    icon.innerHTML = '☰';
+                }
+            }
+            
+            function closeMobileMenu() {
+                sidebar.classList.remove('mobile-open');
+                mobileOverlay.classList.remove('active');
+                mobileToggle.classList.remove('active');
+                
+                const icon = mobileToggle.querySelector('.hamburger-icon');
+                icon.innerHTML = '☰';
+            }
+            
+            if (window.innerWidth <= 768) {
+                mobileToggle.style.display = 'block';
+            }
+            
+            mobileToggle.addEventListener('click', toggleMobileMenu);
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+            
+            // Close mobile menu when clicking nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        closeMobileMenu();
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth <= 768) {
+                    mobileToggle.style.display = 'block';
+                } else {
+                    mobileToggle.style.display = 'none';
+                    closeMobileMenu();
+                }
+            });
+
+            // Load last viewed page or dashboard by default
+            const lastView = localStorage.getItem('currentView') || 'dashboard';
+            loadView(lastView);
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.classList.remove('active');
+                if (l.dataset.view === lastView) {
+                    l.classList.add('active');
+                }
+            });
+
+            // Setup navigation with event delegation
+            document.querySelector('nav ul').addEventListener('click', (e) => {
+                e.preventDefault();
+                const link = e.target.closest('.nav-link');
+                if (!link) return;
+
+                const view = link.dataset.view;
+                if (!view) return;
+
+                loadView(view);
+                localStorage.setItem('currentView', view);
+
+                // Update active state
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+
+            // Setup logout
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    // Clear user data and redirect to login
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                }
+            });
+
+            // Setup modal close buttons
+            document.querySelectorAll('.close').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.style.display = 'none';
+                    });
+                });
+            });
+
+            // Setup admin form submission
+            document.getElementById('admin-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('admin-username').value;
+                const password = document.getElementById('admin-password').value;
+
+                try {
+                    const response = await fetch('/api/auth/admin-validate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.ok) {
+                        document.getElementById('admin-modal').style.display = 'none';
+                        // Proceed with the action that required admin auth
+                        if (window.pendingAction) {
+                            window.pendingAction();
+                            window.pendingAction = null;
+                        }
+                    } else {
+                        alert('Invalid admin credentials!');
+                    }
+                } catch (error) {
+                    console.error('Error validating admin:', error);
+                    alert('Error validating admin credentials');
+                }
+            });
+        });
+
+        // API call function with authentication
+        async function apiCall(url, options = {}) {
+            const token = localStorage.getItem('token');
+
+            const defaultHeaders = {
+                'Authorization': `Bearer ${token}`,
+                ...(options.headers || {})
+            };
+            
+            // Only add Content-Type if not already specified and body is not FormData
+            if (!defaultHeaders['Content-Type'] && !(options.body instanceof FormData)) {
+                defaultHeaders['Content-Type'] = 'application/json';
+            }
+
+            const response = await fetch(url, { 
+                ...options,
+                headers: defaultHeaders
+            });
+
+            if (response.status === 401) {
+                // Unauthorized - redirect to login
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+                return null;
+            }
+
+            return response;
+        }
+
+        // View loader
+        function loadView(view) {
+            const appView = document.getElementById('app-view');
+
+            switch (view) {
+                case 'dashboard':
+                    appView.innerHTML = getDashboardHTML();
+                    setTimeout(() => loadDashboardData(), 100);
+                    break;
+
+                case 'transactions':
+                    appView.innerHTML = getTransactionsHTML();
+                    loadTransactions();
+                    setupTransactionEvents();
+                    break;
+
+                case 'accounts':
+                    appView.innerHTML = getAccountsHTML();
+                    loadAccounts();
+                    break;
+
+                case 'reports':
+                    appView.innerHTML = getReportsHTML();
+                    setupReportDates();
+                    break;
+
+                case 'ledger':
+                    appView.innerHTML = getLedgerHTML();
+                    loadAccountsForLedger();
+                    break;
+
+                case 'users':
+                    if (currentUser.access_level === 'Super Admin') {
+                        appView.innerHTML = getUsersHTML();
+                        loadUsers();
+                        setupUserEvents();
+                    }
+                    break;
+
+                case 'audit':
+                    if (currentUser.access_level === 'Super Admin') {
+                        appView.innerHTML = getAuditHTML();
+                        loadAuditLogs();
+                    }
+                    break;
+            }
+        }
+
+        // Dashboard functions
+        function getDashboardHTML() {
+            return `
+                <div class="dashboard">
+                    <h1>Dashboard - Adtim Technologies (U) Limited</h1>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <h3>Total Income</h3>
+                            <p id="total-income">UGX 0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Expenses</h3>
+                            <p id="total-expenses">UGX 0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Net Profit</h3>
+                            <p id="net-profit">UGX 0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Monthly Tithe (10%)</h3>
+                            <p id="tithe-amount">UGX 0</p>
+                        </div>
+
+                    </div>
+                    <div class="charts-container">
+                        <div class="chart-box">
+                            <h3>Monthly Profits</h3>
+                            <canvas id="profitChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Expense Breakdown</h3>
+                            <canvas id="expensePieChart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Income vs Expenses</h3>
+                            <canvas id="incomeExpenseBar"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadDashboardData() {
+            try {
+                const response = await apiCall('/api/dashboard/summary');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch dashboard data');
+                }
+
+                const data = await response.json();
+
+                // Update stats using the new API response data
+                document.getElementById('total-income').textContent = `UGX ${data.totalIncome.toLocaleString()}`;
+                document.getElementById('total-expenses').textContent = `UGX ${data.totalExpenses.toLocaleString()}`;
+                document.getElementById('net-profit').textContent = `UGX ${data.netProfit.toLocaleString()}`;
+                document.getElementById('tithe-amount').textContent = `UGX ${data.tithe.toLocaleString()}`;
+
+                // Render charts
+                renderDashboardCharts(data);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                document.getElementById('app-view').innerHTML = `
+                    <div class="dashboard">
+                        <h1>Dashboard - Adtim Technologies (U) Limited</h1>
+                        <p class="loading">Could not load dashboard data. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderDashboardCharts(data) {
+            // 1. Profit Line Chart (Income vs Expense)
+            const profitCtx = document.getElementById('profitChart').getContext('2d');
+            const months = data.incomeVsExpense.map(d => d.month);
+            const incomes = data.incomeVsExpense.map(d => parseFloat(d.total_income || 0));
+            const expenses = data.incomeVsExpense.map(d => parseFloat(d.total_expense || 0));
+            const profits = incomes.map((income, i) => income - expenses[i]);
+
+            new Chart(profitCtx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Monthly Profits (UGX)',
+                        data: profits,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            ticks: { maxTicksLimit: 11 }
+                        }
+                    }
+                }
+            });
+
+            // 2. Expense Breakdown Pie Chart
+            const expenseCtx = document.getElementById('expensePieChart').getContext('2d');
+            const expenseLabels = data.expenseBreakdown.map(d => d.category);
+            const expenseTotals = data.expenseBreakdown.map(d => parseFloat(d.total || 0));
+
+            new Chart(expenseCtx, {
+                type: 'pie',
+                data: {
+                    labels: expenseLabels,
+                    datasets: [{
+                        label: 'Expense Breakdown',
+                        data: expenseTotals,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ],
+                    }]
+                },
+            });
+
+            // 3. Income vs Expense Bar Chart
+            const barCtx = document.getElementById('incomeExpenseBar').getContext('2d');
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Income (UGX)',
+                            data: incomes,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                        },
+                        {
+                            label: 'Expenses (UGX)',
+                            data: expenses,
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            ticks: { maxTicksLimit: 11 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Document preview function
+        function previewDoc(documentPath) {
+            if (!documentPath) return;
+
+            console.log('Document path:', documentPath);
+            const fileExtension = documentPath.split('.').pop().toLowerCase();
+            const fileUrl = documentPath.startsWith('/') ? documentPath : '/' + documentPath;
+
+            console.log('File URL:', fileUrl);
+
+            if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+                // Image preview
+                const popup = window.open('', '_blank', 'width=800,height=600');
+                popup.document.write('<html><head><title>Document Preview</title></head><body style="margin:0;padding:20px;text-align:center;"><img src="' + fileUrl + '" style="max-width:100%;max-height:80vh;"></body></html>');
+            } else if (fileExtension === 'pdf') {
+                // PDF preview
+                window.open(fileUrl, '_blank');
+            } else {
+                // Download other files
+                const a = document.createElement('a');
+                a.href = fileUrl;
+                a.download = documentPath.split('/').pop();
+                a.click();
+            }
+        }
+
+        // Transactions functions
+        function getTransactionsHTML() {
+            const canAdd = ['Super Admin', 'Admin', 'User'].includes(currentUser.access_level);
+            const canEdit = ['Super Admin', 'Admin', 'User'].includes(currentUser.access_level);
+
+            return `
+                <div class="transactions">
+                    <div class="section-header">
+                        <h1>Transactions</h1>
+                        <div>
+                            ${canAdd ? '<button id="add-transaction-btn" class="btn-primary">Add Transaction</button>' : ''}
+                            <button onclick="exportTableToPDF('transactions-table','Transactions_Report')" class="btn-primary">Export PDF</button>
+                            <button onclick="exportTableToExcel('transactions-table','Transactions_Report')" class="btn-primary">Export Excel</button>
+                        </div>
+                    </div>
+                    <div class="transactions-table">
+                        <table id="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount (UGX)</th>
+                                    <th>Debit Account</th>
+                                    <th>Credit Account</th>
+                                    <th>Created By</th>
+                                    <th>Document</th>
+                                    ${['Super Admin', 'Admin', 'User'].includes(currentUser.access_level) ? '<th>Actions</th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadTransactions() {
+            try {
+                const response = await apiCall('/api/transactions');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch transactions');
+                }
+
+                transactions = await response.json();
+
+                const tbody = document.querySelector('#transactions-table tbody');
+                tbody.innerHTML = transactions.map(t => {
+                    return `
+                        <tr>
+                            <td>${new Date(t.transaction_date).toLocaleDateString()}</td>
+                            <td>${t.description}</td>
+                            <td>UGX ${parseFloat(t.amount).toLocaleString()}</td>
+                            <td>${t.debit_account}</td>
+                            <td>${t.credit_account}</td>
+                            <td>${t.created_by}</td>
+                            <td>${t.document_path ? `<button class="btn-secondary preview-btn" data-path="${t.document_path}">Preview</button>` : ''}</td>
+                            ${['Super Admin', 'Admin'].includes(currentUser.access_level) ?
+                            `<td>
+                                    <button onclick="editTransaction(${t.id})">Edit</button>
+                                    <button onclick="deleteTransaction(${t.id})">Delete</button>
+                                </td>` : 
+                            ['User'].includes(currentUser.access_level) ?
+                            `<td>
+                                    <button onclick="editTransaction(${t.id})">Edit</button>
+                                </td>` : ''}
+                        </tr>
+                    `;
+                }).join('');
+
+                // Add event listeners for preview buttons
+                document.querySelectorAll('.preview-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const documentPath = this.getAttribute('data-path');
+                        previewDoc(documentPath);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                const tbody = document.querySelector('#transactions-table tbody');
+                tbody.innerHTML = `<tr><td colspan="8">Error loading transactions. Please try again later.</td></tr>`;
+            }
+        }
+
+        function setupTransactionEvents() {
+            const addBtn = document.getElementById('add-transaction-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', () => {
+                    document.getElementById('transaction-modal').style.display = 'block';
+                    loadAccountsForDropdown();
+                });
+            }
+
+            // Transaction form submit - clone to remove existing listeners
+            const transactionForm = document.getElementById('transaction-form');
+            if (transactionForm) {
+                const newForm = transactionForm.cloneNode(true);
+                transactionForm.parentNode.replaceChild(newForm, transactionForm);
+                newForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await submitTransaction();
+                });
+            }
+        }
+
+        async function loadAccountsForDropdown() {
+            try {
+                const response = await apiCall('/api/accounts');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch accounts');
+                }
+
+                const accounts = await response.json();
+
+                const debitSelect = document.getElementById('debit-account');
+                const creditSelect = document.getElementById('credit-account');
+
+                const options = accounts.map(acc => `<option value="${acc.id}">${acc.account_code || ''} - ${acc.name}</option>`).join('');
+
+                debitSelect.innerHTML = '<option value="">Select Debit Account</option>' + options;
+                creditSelect.innerHTML = '<option value="">Select Credit Account</option>' + options;
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                alert('Error loading accounts. Please try again later.');
+            }
+        }
+
+        async function submitTransaction() {
+            if (window.submittingTransaction) return;
+            window.submittingTransaction = true;
+            
+            const description = document.getElementById('description').value;
+            const date = document.getElementById('date').value;
+            const amount = document.getElementById('amount').value;
+            const debitAccountId = document.getElementById('debit-account').value;
+            const creditAccountId = document.getElementById('credit-account').value;
+
+            try {
+                const formData = new FormData();
+                formData.append('description', description);
+                formData.append('date', date);
+                formData.append('amount', amount);
+                formData.append('debit_account_id', debitAccountId);
+                formData.append('credit_account_id', creditAccountId);
+
+                const fileInput = document.getElementById('document');
+                if (fileInput.files[0]) {
+                    formData.append('document', fileInput.files[0]);
+                }
+
+                const response = await apiCall('/api/transactions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add transaction');
+                }
+
+                // Close modal and refresh transactions
+                document.getElementById('transaction-modal').style.display = 'none';
+                loadTransactions();
+
+                // Show success message
+                alert('Transaction added successfully!');
+            } catch (error) {
+                console.error('Error submitting transaction:', error);
+                alert('Error adding transaction. Please try again later.');
+            } finally {
+                window.submittingTransaction = false;
+            }
+        }
+
+        function editTransaction(id) {
+            if (!['Super Admin', 'Admin'].includes(currentUser.access_level)) {
+                document.getElementById('admin-modal').style.display = 'block';
+                window.pendingAction = () => {
+                    // Find the transaction to edit
+                    const transaction = transactions.find(t => t.id === id);
+                    if (transaction) {
+                        // Pre-fill the form with existing data
+                        document.getElementById('description').value = transaction.description;
+                        document.getElementById('date').value = transaction.transaction_date.split('T')[0];
+                        document.getElementById('amount').value = transaction.amount;
+                        document.getElementById('transaction-modal').style.display = 'block';
+                        loadAccountsForDropdown();
+                    }
+                };
+                return;
+            }
+            // For admins, proceed directly to edit
+            const transaction = transactions.find(t => t.id === id);
+            if (transaction) {
+                document.getElementById('description').value = transaction.description;
+                document.getElementById('date').value = transaction.transaction_date.split('T')[0];
+                document.getElementById('amount').value = transaction.amount;
+                document.getElementById('transaction-modal').style.display = 'block';
+                loadAccountsForDropdown();
+            }
+        }
+
+        async function deleteTransaction(id) {
+            if (!['Super Admin', 'Admin'].includes(currentUser.access_level)) {
+                document.getElementById('admin-modal').style.display = 'block';
+                window.pendingAction = async () => {
+                    if (confirm('Are you sure you want to delete this transaction?')) {
+                        await performDeleteTransaction(id);
+                    }
+                };
+                return;
+            }
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                await performDeleteTransaction(id);
+            }
+        }
+
+        async function performDeleteTransaction(id) {
+            try {
+                const response = await apiCall(`/api/transactions/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete transaction');
+                }
+
+                loadTransactions();
+                alert('Transaction deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting transaction:', error);
+                alert('Error deleting transaction. Please try again later.');
+            }
+        }
+
+        // Accounts functions
+        function getAccountsHTML() {
+            return `
+                <div class="accounts">
+                    <div class="section-header">
+                        <h1>Chart of Accounts</h1>
+                        <div class="date-controls">
+                            <label>As of Date: <input type="date" id="accounts-end-date"></label>
+                            <button onclick="loadAccountsWithPeriod()" class="btn-primary">Update Balances</button>
+                        </div>
+                    </div>
+                    <div class="accounts-grid">
+                        <div class="account-category">
+                            <h3>Assets</h3>
+                            <div id="assets-list"></div>
+                        </div>
+                        <div class="account-category">
+                            <h3>Liabilities</h3>
+                            <div id="liabilities-list"></div>
+                        </div>
+                        <div class="account-category">
+                            <h3>Equity</h3>
+                            <div id="equity-list"></div>
+                        </div>
+                        <div class="account-category">
+                            <h3>Income</h3>
+                            <div id="income-list"></div>
+                        </div>
+                        <div class="account-category">
+                            <h3>Expenses</h3>
+                            <div id="expenses-list"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadAccounts() {
+            try {
+                const response = await apiCall('/api/accounts');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch accounts');
+                }
+
+                accounts = await response.json();
+
+                // Group accounts by type and sort by account code
+                const assets = accounts.filter(a => a.type === 'Asset').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+                const liabilities = accounts.filter(a => a.type === 'Liability').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+                const equity = accounts.filter(a => a.type === 'Equity').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+                const income = accounts.filter(a => a.type === 'Income').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+                const expenses = accounts.filter(a => a.type === 'Expense').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+
+                // Populate each category with balances
+                document.getElementById('assets-list').innerHTML = assets.map(a =>
+                    `<div class="account-item">
+                         <span>${a.account_code || ''} - ${a.name}</span>
+                         <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                     </div>`
+                ).join('');
+
+                document.getElementById('liabilities-list').innerHTML = liabilities.map(a =>
+                    `<div class="account-item">
+                         <span>${a.name}</span>
+                         <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                     </div>`
+                ).join('');
+
+                document.getElementById('equity-list').innerHTML = equity.map(a =>
+                    `<div class="account-item">
+                         <span>${a.name}</span>
+                         <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                     </div>`
+                ).join('');
+
+                document.getElementById('income-list').innerHTML = income.map(a =>
+                    `<div class="account-item">
+                         <span>${a.name}</span>
+                         <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                     </div>`
+                ).join('');
+
+                document.getElementById('expenses-list').innerHTML = expenses.map(a =>
+                    `<div class="account-item">
+                         <span>${a.name}</span>
+                         <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                     </div>`
+                ).join('');
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                document.getElementById('app-view').innerHTML = `
+                    <div class="accounts">
+                        <h1>Chart of Accounts</h1>
+                        <p class="loading">Error loading accounts. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Reports functions
+        function getReportsHTML() {
+            return `
+                <div class="reports">
+                    <h1>Financial Reports</h1>
+                    <div class="report-controls">
+                        <div class="date-inputs">
+                            <label>Start Date: <input type="date" id="report-start-date"></label>
+                            <label>End Date: <input type="date" id="report-end-date"></label>
+                            <label>Balance Sheet Period Start: <input type="date" id="bs-start-date"></label>
+                            <label>Balance Sheet As of Date: <input type="date" id="report-as-of-date"></label>
+                        </div>
+                    </div>
+                    <div class="reports-grid">
+                        <div class="report-card" onclick="generatePLReport()">
+                            <h3>Profit & Loss</h3>
+                            <p>Detailed income statement with sources and uses</p>
+                        </div>
+                        <div class="report-card" onclick="generateBalanceSheet()">
+                            <h3>Balance Sheet</h3>
+                            <p>Financial position with account details</p>
+                        </div>
+                        <div class="report-card" onclick="generateCashFlow()">
+                            <h3>Cash Flow Statement</h3>
+                            <p>Detailed cash movements by category</p>
+                        </div>
+                    </div>
+                    <div id="report-content"></div>
+                </div>
+            `;
+        }
+
+        function setupReportDates() {
+            const today = new Date().toISOString().split('T')[0];
+            const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+            document.getElementById('report-start-date').value = firstDay;
+            document.getElementById('report-end-date').value = today;
+            document.getElementById('report-as-of-date').value = today;
+        }
+
+        async function generatePLReport() {
+            const startDate = document.getElementById('report-start-date').value;
+            const endDate = document.getElementById('report-end-date').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select start and end dates');
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/api/reports/pl?startDate=${startDate}&endDate=${endDate}`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate P&L report');
+                }
+
+                const data = await response.json();
+
+                const reportContent = document.getElementById('report-content');
+                reportContent.innerHTML = `
+                    <div class="section-header">
+                        <h2>Profit & Loss Statement</h2>
+                        <div>
+                            <button onclick="exportReportToPDF('pl-report','PL_Statement','Profit & Loss Statement')" class="btn-primary">Export PDF</button>
+                        </div>
+                    </div>
+                    <div class="report" id="pl-report">
+                        <div class="report-header">
+                            <img src="/images/logo.png" alt="Company Logo">
+                            <h1>Adtim Technologies (U) Limited</h1>
+                        </div>
+                        <h2>Profit & Loss Statement</h2>
+                        <p class="report-period">Period: ${startDate} to ${endDate}</p>
+                        
+                        <table class="report-table">
+                            <tr><th>Revenue</th><th>Amount</th></tr>
+                            ${data.income.map(item => `
+                                <tr><td>${item.name}</td><td>UGX ${parseFloat(item.total || 0).toLocaleString()}</td></tr>
+                            `).join('')}
+                            <tr class="report-total report-positive"><td>Total Revenue</td><td>UGX ${parseFloat(data.totalIncome || 0).toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <table class="report-table">
+                            <tr><th>Expenses</th><th>Amount</th></tr>
+                            ${data.expenses.map(item => `
+                                <tr><td>${item.name}</td><td>UGX ${parseFloat(item.total || 0).toLocaleString()}</td></tr>
+                            `).join('')}
+                            <tr class="report-total report-negative"><td>Total Expenses</td><td>UGX ${parseFloat(data.totalExpenses || 0).toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <p class="report-final-total ${parseFloat(data.netProfit || 0) >= 0 ? 'report-positive' : 'report-negative'}">
+                            Net ${parseFloat(data.netProfit || 0) >= 0 ? 'Profit' : 'Loss'}: UGX ${parseFloat(data.netProfit || 0).toLocaleString()}
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error generating P&L report:', error);
+                alert('Error generating Profit & Loss report. Please try again later.');
+            }
+        }
+
+        async function generateBalanceSheet() {
+            const asOfDate = document.getElementById('report-as-of-date').value;
+            const startDate = document.getElementById('bs-start-date').value;
+            
+            if (!asOfDate) {
+                alert('Please select as of date');
+                return;
+            }
+            
+            if (!startDate) {
+                alert('Please select balance sheet period start date');
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/api/reports/balance-sheet?asOfDate=${asOfDate}&startDate=${startDate}`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate balance sheet');
+                }
+
+                const data = await response.json();
+
+                const totalAssets = data.assets.reduce((sum, item) => sum + parseFloat(item.balance || 0), 0);
+                const totalLiabilities = data.liabilities.reduce((sum, item) => sum + parseFloat(item.balance || 0), 0);
+                const totalEquity = data.equity.reduce((sum, item) => sum + parseFloat(item.balance || 0), 0);
+
+                const reportContent = document.getElementById('report-content');
+                reportContent.innerHTML = `
+                    <div class="section-header">
+                        <h2>Balance Sheet</h2>
+                        <div>
+                            <button onclick="exportReportToPDF('bs-report','Balance_Sheet','Balance Sheet')" class="btn-primary">Export PDF</button>
+                        </div>
+                    </div>
+                    <div class="report" id="bs-report">
+                        <div class="report-header">
+                            <img src="/images/logo.png" alt="Company Logo">
+                            <h1>Adtim Technologies (U) Limited</h1>
+                        </div>
+                        <h2>Balance Sheet</h2>
+                        <p class="report-period">Financial Year: ${startDate} to ${asOfDate}</p>
+                        
+                        <table class="report-table">
+                            <tr><th>Assets</th><th>Amount</th></tr>
+                            ${data.assets.map(item => `
+                                <tr><td>${item.name}</td><td>UGX ${parseFloat(item.balance || 0).toLocaleString()}</td></tr>
+                            `).join('')}
+                            <tr class="report-total"><td>Total Assets</td><td>UGX ${totalAssets.toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <table class="report-table">
+                            <tr><th>Liabilities</th><th>Amount</th></tr>
+                            ${data.liabilities.map(item => `
+                                <tr><td>${item.name}</td><td>UGX ${parseFloat(item.balance || 0).toLocaleString()}</td></tr>
+                            `).join('')}
+                            <tr class="report-total"><td>Total Liabilities</td><td>UGX ${totalLiabilities.toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <table class="report-table">
+                            <tr><th>Equity</th><th>Amount</th></tr>
+                            ${data.equity.map(item => `
+                                <tr><td>${item.name}</td><td>UGX ${parseFloat(item.balance || 0).toLocaleString()}</td></tr>
+                            `).join('')}
+
+                            <tr class="report-total"><td>Total Equity</td><td>UGX ${totalEquity.toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <p class="report-final-total">
+                            Assets = Liabilities + Equity<br>
+                            UGX ${totalAssets.toLocaleString()} = UGX ${(totalLiabilities + totalEquity).toLocaleString()}
+                            ${Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01 ? ' ✓ Balanced' : ' ⚠ Not Balanced'}
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error generating balance sheet:', error);
+                alert('Error generating Balance Sheet. Please try again later.');
+            }
+        }
+
+        async function generateCashFlow() {
+            const startDate = document.getElementById('report-start-date').value;
+            const endDate = document.getElementById('report-end-date').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select start and end dates');
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/api/reports/cashflow?startDate=${startDate}&endDate=${endDate}`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate cash flow statement');
+                }
+
+                const data = await response.json();
+
+                const netCashFlow = data.operating + data.investing + data.financing;
+
+                const reportContent = document.getElementById('report-content');
+                reportContent.innerHTML = `
+                    <div class="section-header">
+                        <h2>Cash Flow Statement</h2>
+                        <div>
+                            <button onclick="exportReportToPDF('cf-report','Cash_Flow_Statement','Cash Flow Statement')" class="btn-primary">Export PDF</button>
+                        </div>
+                    </div>
+                    <div class="report" id="cf-report">
+                        <div class="report-header">
+                            <img src="/images/logo.png" alt="Company Logo">
+                            <h1>Adtim Technologies (U) Limited</h1>
+                        </div>
+                        <h2>Cash Flow Statement</h2>
+                        <p class="report-period">Period: ${startDate} to ${endDate}</p>
+                        
+                        <h3>Operating Activities</h3>
+                        <table class="report-table">
+                            <tr><td>Net cash from operations</td><td>UGX ${data.operating.toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <h3>Investing Activities</h3>
+                        <table class="report-table">
+                            <tr><td>Net cash from investing</td><td>UGX ${data.investing.toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <h3>Financing Activities</h3>
+                        <table class="report-table">
+                            <tr><td>Net cash from financing</td><td>UGX ${data.financing.toLocaleString()}</td></tr>
+                        </table>
+                        
+                        <p class="report-final-total ${netCashFlow >= 0 ? 'report-positive' : 'report-negative'}">
+                            Net Change in Cash: UGX ${netCashFlow.toLocaleString()}
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error generating cash flow statement:', error);
+                alert('Error generating Cash Flow Statement. Please try again later.');
+            }
+        }
+
+        // Ledger functions
+        function getLedgerHTML() {
+            return `
+                <div class="ledger">
+                    <h1>Account Ledger</h1>
+                    <div class="ledger-controls">
+                        <select id="ledger-account">
+                            <option value="">Select Account</option>
+                        </select>
+                        <input type="date" id="ledger-start-date">
+                        <input type="date" id="ledger-end-date">
+                        <button onclick="loadLedgerEntries()">Load Entries</button>
+                        <button onclick="exportTableToPDF('ledger-table','Ledger_Report')">Export PDF</button>
+                        <button onclick="exportTableToExcel('ledger-table','Ledger_Report')">Export Excel</button>
+                    </div>
+                    <div id="ledger-content">
+                        <table id="ledger-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Amount (UGX)</th>
+                                    <th>Other Account</th>
+                                    <th>Balance (UGX)</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadAccountsForLedger() {
+            try {
+                const response = await apiCall('/api/accounts');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch accounts');
+                }
+
+                const accounts = await response.json();
+
+                const select = document.getElementById('ledger-account');
+                select.innerHTML = '<option value="">Select Account</option>' +
+                    accounts.map(acc => `<option value="${acc.id}">${acc.name} (${acc.type})</option>`).join('');
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                alert('Error loading accounts. Please try again later.');
+            }
+        }
+
+        async function loadLedgerEntries() {
+            const accountId = document.getElementById('ledger-account').value;
+            const startDate = document.getElementById('ledger-start-date').value;
+            const endDate = document.getElementById('ledger-end-date').value;
+
+            if (!accountId || !startDate || !endDate) {
+                alert('Please select account and date range');
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/api/ledger/${accountId}?startDate=${startDate}&endDate=${endDate}`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch ledger entries');
+                }
+
+                const entries = await response.json();
+
+                let runningBalance = 0;
+                const tbody = document.querySelector('#ledger-table tbody');
+                tbody.innerHTML = entries.map(entry => {
+                    runningBalance += entry.type === 'Debit' ? parseFloat(entry.amount) : -parseFloat(entry.amount);
+                    return `
+                        <tr>
+                            <td>${new Date(entry.transaction_date).toLocaleDateString()}</td>
+                            <td>${entry.description}</td>
+                            <td>${entry.type}</td>
+                            <td>UGX ${parseFloat(entry.amount).toLocaleString()}</td>
+                            <td>${entry.other_account}</td>
+                            <td>UGX ${runningBalance.toLocaleString()}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading ledger entries:', error);
+                const tbody = document.querySelector('#ledger-table tbody');
+                tbody.innerHTML = `<tr><td colspan="6">Error loading ledger entries. Please try again later.</td></tr>`;
+            }
+        }
+
+        // Users functions
+        function getUsersHTML() {
+            return `
+                <div class="users">
+                    <div class="section-header">
+                        <h1>User Management</h1>
+                        <div>
+                            <button id="add-user-btn" class="btn-primary">Add User</button>
+                            <button onclick="exportTableToPDF('users-table','Users_Report')" class="btn-primary">Export PDF</button>
+                            <button onclick="exportTableToExcel('users-table','Users_Report')" class="btn-primary">Export Excel</button>
+                        </div>
+                    </div>
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Access Level</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await apiCall('/api/users');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+
+                users = await response.json();
+
+                const tbody = document.querySelector('#users-table tbody');
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${user.access_level}</td>
+                        <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <button onclick="editUser(${user.id})">Edit</button>
+                            <button onclick="resetUserPassword(${user.id}, '${user.username}')">Reset Password</button>
+                            <button onclick="deleteUser(${user.id})" ${user.access_level === 'Super Admin' ? 'disabled' : ''}>
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+                const tbody = document.querySelector('#users-table tbody');
+                tbody.innerHTML = `<tr><td colspan="5">Error loading users. Please try again later.</td></tr>`;
+            }
+        }
+
+        function setupUserEvents() {
+            const addBtn = document.getElementById('add-user-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', () => {
+                    // Reset form for new user
+                    document.getElementById('user-form').reset();
+                    delete document.getElementById('user-form').dataset.userId;
+                    document.querySelector('#user-modal h2').textContent = 'Add User';
+                    document.querySelector('#user-modal button[type="submit"]').textContent = 'Create User';
+                    document.getElementById('user-modal').style.display = 'block';
+                });
+            }
+
+            const userForm = document.getElementById('user-form');
+            if (userForm) {
+                userForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await submitUser();
+                });
+            }
+        }
+
+        async function submitUser() {
+            const username = document.getElementById('user-username').value;
+            const email = document.getElementById('user-email').value;
+            const password = document.getElementById('user-password').value;
+            const access_level = document.getElementById('user-access-level').value;
+            const userId = document.getElementById('user-form').dataset.userId;
+
+            try {
+                let response;
+                let successMessage;
+
+                if (userId) {
+                    // Update existing user
+                    const updateData = { username, email, access_level };
+                    if (password) updateData.password = password; // Only include password if provided
+
+                    response = await apiCall(`/api/users/${userId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+                    successMessage = 'User updated successfully!';
+                } else {
+                    // Create new user
+                    response = await apiCall('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, email, password, access_level })
+                    });
+                    successMessage = 'User created successfully!';
+                }
+
+                if (!response || !response.ok) {
+                    const errorData = response ? await response.json() : { error: 'Network error' };
+                    throw new Error(errorData.error || 'Failed to save user');
+                }
+
+                // Reset form and modal
+                document.getElementById('user-form').reset();
+                delete document.getElementById('user-form').dataset.userId;
+                document.querySelector('#user-modal h2').textContent = 'Add User';
+                document.querySelector('#user-modal button[type="submit"]').textContent = 'Create User';
+
+                // Close modal and refresh users
+                document.getElementById('user-modal').style.display = 'none';
+                loadUsers();
+
+                alert(successMessage);
+            } catch (error) {
+                console.error('Error saving user:', error);
+                alert('Error saving user: ' + error.message);
+            }
+        }
+
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+
+            // Pre-fill the form with existing user data
+            document.getElementById('user-username').value = user.username;
+            document.getElementById('user-email').value = user.email;
+            document.getElementById('user-access-level').value = user.access_level;
+            document.getElementById('user-password').value = ''; // Clear password field
+
+            // Change modal title and button text
+            document.querySelector('#user-modal h2').textContent = 'Edit User';
+            document.querySelector('#user-modal button[type="submit"]').textContent = 'Update User';
+
+            // Store the user ID for update
+            document.getElementById('user-form').dataset.userId = id;
+
+            // Show modal
+            document.getElementById('user-modal').style.display = 'block';
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+
+            try {
+                const response = await apiCall(`/api/users/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete user');
+                }
+
+                loadUsers();
+                alert('User deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Error deleting user. Please try again later.');
+            }
+        }
+
+        // Audit logs functions
+        function getAuditHTML() {
+            return `
+                <div class="audit">
+                    <div class="section-header">
+                        <h1>Audit Logs</h1>
+                        <div>
+                            <button onclick="exportTableToPDF('audit-table','Audit_Logs')" class="btn-primary">Export PDF</button>
+                            <button onclick="exportTableToExcel('audit-table','Audit_Logs')" class="btn-primary">Export Excel</button>
+                        </div>
+                    </div>
+                    <table id="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function loadAuditLogs() {
+            try {
+                const response = await apiCall('/api/audit');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch audit logs');
+                }
+
+                auditLogs = await response.json();
+
+                const tbody = document.querySelector('#audit-table tbody');
+                tbody.innerHTML = auditLogs.map(log => `
+                    <tr>
+                        <td>${new Date(log.created_at).toLocaleString()}</td>
+                        <td>${log.username || 'System'}</td>
+                        <td>${log.action}</td>
+                        <td>${log.details || 'N/A'}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading audit logs:', error);
+                const tbody = document.querySelector('#audit-table tbody');
+                tbody.innerHTML = `<tr><td colspan="4">Error loading audit logs. Please try again later.</td></tr>`;
+            }
+        }
+        function previewDoc(url) {
+            document.getElementById('docFrame').src = url;
+            document.getElementById('docPreviewModal').style.display = 'flex';
+        }
+
+        function closePreview() {
+            document.getElementById('docPreviewModal').style.display = 'none';
+        }
+        window.previewDoc = previewDoc;
+
+
+        // Export functions
+        function exportTableToPDF(tableId, filename) {
+            const doc = new jspdf.jsPDF();
+            doc.text('Adtim Technologies (U) Limited', 20, 20);
+            doc.text('Generated: ' + new Date().toLocaleDateString(), 20, 30);
+            doc.autoTable({ html: '#' + tableId, startY: 40 });
+            doc.save(filename + '.pdf');
+        }
+
+        function exportReportToPDF(reportId) {
+            const reportSection = document.getElementById(reportId);
+            if (!reportSection) {
+                alert('Report section not found!');
+                return;
+            }
+
+            // Get the specific report name and period from the report section
+            let reportTitle = '';
+            let period = '';
+
+            // Try to extract from the report section's content
+            const h2 = reportSection.querySelector('h2');
+            if (h2) {
+                reportTitle = h2.textContent.replace(' - Adtim Technologies (U) Limited', '').trim();
+            }
+            const p = reportSection.querySelector('p');
+            if (p) {
+                period = p.textContent.replace('Period:', '').replace('As of:', '').trim();
+            }
+
+            // Beautified logo and header
+            const headerHtml = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="/images/logo.png" alt="Company Logo"
+                        style="width:180px; height:auto; border-radius:20px; box-shadow:0 4px 15px rgba(0,0,0,0.15); margin-bottom:20px;">
+                    <h1 style="margin: 10px 0 0 0; font-size:2em;">Adtim Technologies (U) Limited</h1>
+                    <h3 style="margin: 8px 0 0 0; font-weight:400; color:#555;">${reportTitle}</h3>
+                    ${period ? `<h4 style="margin: 4px 0 0 0; font-weight:400; color:#888;">${period}</h4>` : ''}
+                </div>
+            `;
+
+            const tempContainer = document.createElement('div');
+            tempContainer.style.background = "#fff";
+            tempContainer.style.padding = "30px";
+            tempContainer.style.fontFamily = "Arial, sans-serif";
+            tempContainer.style.color = "#222";
+            tempContainer.style.fontSize = "18px";
+            tempContainer.style.width = "800px";
+            tempContainer.style.minHeight = "1000px";
+            
+            // Force desktop layout for PDF export
+            const reportElements = tempContainer.querySelectorAll('.report-section, .report-line, .total');
+            reportElements.forEach(el => {
+                el.style.fontSize = '16px';
+                el.style.padding = '8px 0';
+            });
+            
+            // Fix balance sheet grid layout for PDF
+            const balanceSheet = tempContainer.querySelector('.balance-sheet');
+            if (balanceSheet) {
+                balanceSheet.style.display = 'grid';
+                balanceSheet.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                balanceSheet.style.gap = '20px';
+            }
+            
+            // Ensure sections don't break mobile layout
+            const bsSections = tempContainer.querySelectorAll('.bs-section');
+            bsSections.forEach(section => {
+                section.style.breakInside = 'avoid';
+                section.style.pageBreakInside = 'avoid';
+            });
+            tempContainer.innerHTML = reportSection.outerHTML;
+            document.body.appendChild(tempContainer);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Add letterhead
+            const img = new Image();
+            img.onload = function() {
+                const imgWidth = 210;
+                const imgHeight = (img.height / img.width) * imgWidth;
+                doc.addImage(img, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                // Add report title and period
+                const startY = imgHeight + 15;
+                doc.setFontSize(16);
+                doc.text(reportTitle, 20, startY);
+                if (period) {
+                    // Convert period dates to DD-MM-YYYY format
+                    let formattedPeriod = period;
+                    if (period.includes('to')) {
+                        const dates = period.replace('Period: ', '').split(' to ');
+                        if (dates.length === 2) {
+                            const startDate = new Date(dates[0]).toLocaleDateString('en-GB');
+                            const endDate = new Date(dates[1]).toLocaleDateString('en-GB');
+                            formattedPeriod = `Period: ${startDate} to ${endDate}`;
+                        }
+                    } else if (period.includes('As of:')) {
+                        const dateStr = period.replace('As of: ', '');
+                        const asOfDate = new Date(dateStr).toLocaleDateString('en-GB');
+                        formattedPeriod = `As of: ${asOfDate}`;
+                    }
+                    doc.setFontSize(12);
+                    doc.text(formattedPeriod, 20, startY + 10);
+                }
+                
+                // Extract and add table data
+                const tables = tempContainer.querySelectorAll('.report-table');
+                let yPosition = period ? startY + 25 : startY + 15;
+            
+            const sectionHeaders = tempContainer.querySelectorAll('h3');
+            let sectionIndex = 0;
+            const pageHeight = 280; // Leave space for footer
+            
+            tables.forEach((table, tableIndex) => {
+                // Check if we need a new page
+                if (yPosition > pageHeight - 30) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                // Add section header if exists
+                if (sectionHeaders[sectionIndex]) {
+                    if (yPosition > pageHeight - 20) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(sectionHeaders[sectionIndex].textContent.trim(), 20, yPosition);
+                    yPosition += 10;
+                    sectionIndex++;
+                }
+                
+                const rows = table.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('th, td');
+                    if (cells.length >= 2) {
+                        // Check if we need a new page
+                        if (yPosition > pageHeight - 10) {
+                            doc.addPage();
+                            yPosition = 20;
+                        }
+                        
+                        const isHeader = row.querySelector('th');
+                        const isTotal = row.classList.contains('report-total');
+                        
+                        doc.setFontSize(isHeader ? 12 : (isTotal ? 11 : 10));
+                        if (isHeader || isTotal) doc.setFont(undefined, 'bold');
+                        else doc.setFont(undefined, 'normal');
+                        
+                        doc.text(cells[0].textContent.trim(), 20, yPosition);
+                        doc.text(cells[1].textContent.trim(), 120, yPosition);
+                        yPosition += 8;
+                    }
+                });
+                yPosition += 15; // More space between sections
+            });
+            
+            // Add final total if exists
+            const finalTotal = tempContainer.querySelector('.report-final-total');
+            if (finalTotal) {
+                if (yPosition > pageHeight - 20) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text(finalTotal.textContent.trim(), 20, yPosition + 10);
+            }
+            
+                // Add company signature footer
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                doc.text('Adtim Technologies (U) Limited', 20, 285);
+                
+                // Build filename
+                let filename = reportTitle;
+                if (period) filename += ` (${period})`;
+                filename = filename.replace(/[^\w\s\-().]/g, '').replace(/\s+/g, '_');
+                doc.save(filename + '.pdf');
+                tempContainer.remove();
+            };
+            img.src = '/images/Header.png';
+        }
+
+        function exportTableToExcel(tableId, filename) {
+            try {
+                const table = document.getElementById(tableId);
+                if (!table) {
+                    alert('Table not found for export.');
+                    return;
+                }
+                const wb = XLSX.utils.table_to_book(table);
+                XLSX.writeFile(wb, filename + ".xlsx");
+            } catch (error) {
+                console.error('Excel Export Error:', error);
+                alert('Error exporting Excel file. Please try again.');
+            }
+        }
+
+        // Make functions available globally
+        window.loadView = loadView;
+        window.editTransaction = editTransaction;
+        window.deleteTransaction = deleteTransaction;
+        window.loadLedgerEntries = loadLedgerEntries;
+        window.generatePLReport = generatePLReport;
+        window.generateBalanceSheet = generateBalanceSheet;
+        window.generateCashFlow = generateCashFlow;
+        window.editUser = editUser;
+        window.deleteUser = deleteUser;
+        window.exportTableToPDF = exportTableToPDF;
+        window.exportTableToExcel = exportTableToExcel;
+        window.exportReportToPDF = exportReportToPDF;
+        window.resetUserPassword = resetUserPassword;
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show custom install button
+            const installBtn = document.createElement('button');
+            installBtn.textContent = '📱 Install App';
+            installBtn.className = 'btn-primary install-btn';
+            installBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 1000;';
+            
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log('Install outcome:', outcome);
+                    deferredPrompt = null;
+                    installBtn.remove();
+                }
+            });
+            
+            document.body.appendChild(installBtn);
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            deferredPrompt = null;
+        });
+        window.loadAccountsWithPeriod = loadAccountsWithPeriod;
+        
+        async function loadAccountsWithPeriod() {
+            const endDate = document.getElementById('accounts-end-date').value;
+            
+            if (!endDate) {
+                alert('Please select an end date');
+                return;
+            }
+            
+            try {
+                const response = await apiCall(`/api/accounts?endDate=${endDate}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch accounts');
+                }
+                
+                const accounts = await response.json();
+                updateAccountsDisplay(accounts);
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                alert('Error loading accounts. Please try again later.');
+            }
+        }
+        
+        function updateAccountsDisplay(accounts) {
+            const assets = accounts.filter(a => a.type === 'Asset').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+            const liabilities = accounts.filter(a => a.type === 'Liability').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+            const equity = accounts.filter(a => a.type === 'Equity').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+            const income = accounts.filter(a => a.type === 'Income').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+            const expenses = accounts.filter(a => a.type === 'Expense').sort((a, b) => (a.account_code || '').localeCompare(b.account_code || ''));
+            
+            document.getElementById('assets-list').innerHTML = assets.map(a =>
+                `<div class="account-item">
+                     <span>${a.account_code || ''} - ${a.name}</span>
+                     <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                 </div>`
+            ).join('');
+            
+            document.getElementById('liabilities-list').innerHTML = liabilities.map(a =>
+                `<div class="account-item">
+                     <span>${a.account_code || ''} - ${a.name}</span>
+                     <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                 </div>`
+            ).join('');
+            
+            document.getElementById('equity-list').innerHTML = equity.map(a =>
+                `<div class="account-item">
+                     <span>${a.account_code || ''} - ${a.name}</span>
+                     <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                 </div>`
+            ).join('');
+            
+            document.getElementById('income-list').innerHTML = income.map(a =>
+                `<div class="account-item">
+                     <span>${a.account_code || ''} - ${a.name}</span>
+                     <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                 </div>`
+            ).join('');
+            
+            document.getElementById('expenses-list').innerHTML = expenses.map(a =>
+                `<div class="account-item">
+                     <span>${a.account_code || ''} - ${a.name}</span>
+                     <span>UGX ${parseFloat(a.balance || 0).toLocaleString()}</span>
+                 </div>`
+            ).join('');
+        }
+        
+        async function resetUserPassword(userId, username) {
+            const newPassword = prompt(`Enter new password for ${username}:`);
+            if (!newPassword) return;
+            
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            
+            try {
+                const response = await apiCall(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: user.username,
+                        email: user.email,
+                        password: newPassword,
+                        access_level: user.access_level
+                    })
+                });
+                
+                if (response.ok) {
+                    alert(`Password reset for ${username}. New password: ${newPassword}`);
+                } else {
+                    alert('Failed to reset password');
+                }
+            } catch (error) {
+                alert('Error resetting password');
+            }
+        }
+
+
+    </script>
+    <!-- Document Preview Modal -->
+    <div id="docPreviewModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closePreview()">&times;</span>
+            <iframe id="docFrame" width="100%" height="500px"></iframe>
+        </div>
+    </div>
+
+</body>
+
+</html>
