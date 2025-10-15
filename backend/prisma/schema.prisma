@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
+
+enum VoucherStatus {
+  UNUSED
+  USED
+}
+
+enum ProviderType {
+  MTN
+  AIRTEL
+}
+
+model Package {
+  id              String   @id @default(uuid())
+  name            String
+  priceUgx        Int
+  durationMinutes Int?
+  dataMb          Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  orders          Order[]
+  vouchers        Voucher[]
+}
+
+model Order {
+  id                 String       @id @default(uuid())
+  msisdn             String
+  packageId          String
+  package            Package      @relation(fields: [packageId], references: [id])
+  amountUgx          Int
+  status             OrderStatus  @default(PENDING)
+  provider           ProviderType
+  providerTxRef      String       @unique
+  providerTxId       String?
+  callbackVerifiedAt DateTime?
+  failureReason      String?
+  voucher            Voucher?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+model Voucher {
+  id                  String        @id @default(uuid())
+  code                String        @unique
+  packageId           String
+  package             Package       @relation(fields: [packageId], references: [id])
+  status              VoucherStatus @default(UNUSED)
+  expiresAt           DateTime?
+  redeemedAt          DateTime?
+  generatedForOrderId String?       @unique
+  order               Order?        @relation(fields: [generatedForOrderId], references: [id])
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+}
+
+model WebhookEvent {
+  id             String        @id @default(uuid())
+  provider       ProviderType
+  rawPayload     Json
+  signatureValid Boolean       @default(false)
+  orderId        String?
+  order          Order?        @relation(fields: [orderId], references: [id])
+  receivedAt     DateTime      @default(now())
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

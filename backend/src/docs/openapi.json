@@ -1,0 +1,107 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Uganda Wi-Fi Billing API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:4000/api/v1" }
+  ],
+  "paths": {
+    "/packages": {
+      "get": {
+        "summary": "List active packages",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Create order",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "packageId": { "type": "string", "format": "uuid" },
+                  "msisdn": { "type": "string" },
+                  "provider": { "type": "string", "enum": ["MTN", "AIRTEL"] }
+                },
+                "required": ["packageId", "msisdn", "provider"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created"
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "summary": "Get order status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Order details" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/webhooks/mtn": {
+      "post": {
+        "summary": "MTN webhook",
+        "responses": {
+          "200": { "description": "Accepted" }
+        }
+      }
+    },
+    "/webhooks/airtel": {
+      "post": {
+        "summary": "Airtel webhook",
+        "responses": {
+          "200": { "description": "Accepted" }
+        }
+      }
+    },
+    "/vouchers/verify": {
+      "post": {
+        "summary": "Verify voucher",
+        "responses": {
+          "200": { "description": "Voucher details" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/admin/login": {
+      "post": {
+        "summary": "Admin login",
+        "responses": {
+          "200": { "description": "JWT token" }
+        }
+      }
+    },
+    "/admin/orders": {
+      "get": {
+        "summary": "Admin order listing",
+        "responses": {
+          "200": { "description": "Order list" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    }
+  }
+}
